@@ -1,10 +1,11 @@
-import {Nav} from "./components/index.js";
+import {Nav, Dropfile} from "./components/index.js";
 
 
 const App = () => {
   return (
     <>
       <Nav />
+      <Dropfile />
     </>
   )
 }

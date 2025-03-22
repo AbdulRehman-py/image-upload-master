@@ -8,6 +8,9 @@ export default {
     extend: {
       // Your theme extensions here
     },
+    screens: {
+      'customsize': '450px',
+    },
   },
   plugins: [
     // Your plugins here
