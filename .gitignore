@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Set default behavior to automatically normalize line endings
+* text=auto
