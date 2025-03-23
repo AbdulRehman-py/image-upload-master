@@ -30,7 +30,7 @@ const Dropfile = ({isDarkMode}) => {
   // Determine which padding to apply
   const getPaddingClass = () => {
     if (screenSize.isSmall) {
-      return 'px-[1.8rem] py-[5rem]';
+      return 'px-[1.5rem] py-[5rem]';
     } else if (screenSize.isMobile) {
       return 'p-[5rem]';
     } else {
@@ -45,11 +45,10 @@ const Dropfile = ({isDarkMode}) => {
           className={`border-4 border-dotted ${getBorderColor()} rounded-lg flex flex-col items-center justify-center ${getPaddingClass()} transition-colors duration-300`}
         >
           <img 
-            src="/download.svg" 
+            src="/logo-small.svg" 
             alt="download icon" 
-            className={isDarkMode ? "filter brightness-1" : "filter brightness-0"}
-            width={20}
-            height={15}
+            width={30}
+            height={20}
           />
           <span className={`${getTextColor()} text-[0.9rem] sm:text-base font-semibold font-sans mt-4 transition-colors duration-300`}>
             Drag and drop files or <strong className="text-blue-500 cursor-pointer font-inter">browse files</strong>
