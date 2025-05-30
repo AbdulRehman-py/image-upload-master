@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ShowImage from "./ShowImage";
+import { supabase } from "../../supabaseClient";
 
 const Dropfile = ({ isDarkMode }) => {
   const [screenSize, setScreenSize] = useState({
@@ -38,9 +39,11 @@ const Dropfile = ({ isDarkMode }) => {
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
   const [uniqueUrl, setUniqueUrl] = useState("");
-  const handleButtonClick = () => {
-    fileInputRef.current.click();
-  };
+  const handleButtonClick = () => fileInputRef.current.click();
+  const [uploadedFilename , setUploadedFilename] = useState("");
+ 
+
+
 
   const handleFileChange = () => {
     const selectedFile = fileInputRef.current.files[0];
@@ -54,44 +57,63 @@ const Dropfile = ({ isDarkMode }) => {
     }
   };
 
-  // Save image to database when file is set
   useEffect(() => {
+
     if (!file) return;
 
-    async function saveImageToDataBase() {
-      const uniqueUrl = `http://localhost:3000/images/${Date.now()}-${
-        file.name
-      }`;
-      setUniqueUrl(uniqueUrl);
+    
+    const filename = `${Date.now()}-${file.name}`;
+    setUploadedFilename(filename);
+    async function ImageSave() {
+      
+      const {error} = await supabase.storage
+        .from('images')
+        .upload(filename, file);
 
-      const formData = new FormData();
-      formData.append("image_url", uniqueUrl);
-      formData.append("image_name", file.name);
-      formData.append("image_data", file);
-
-      try {
-        const post = await fetch("http://localhost:3000/api/saveImage", {
-          method: "POST",
-          body: formData,
-        });
-        const response = await post.json();
-        if (response.success) {
-          console.log("Image saved successfully:", response.data);
-        } else {
-          console.error("Error saving image:", response.error);
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
+      if (error) {
+        console.error("Error uploading file:", error);
+        return;
       }
+
+      const { data} = supabase.storage
+      .from("images")
+      .getPublicUrl(filename);
+
+      setUniqueUrl(data.publicUrl);
+    
+    
+    try {
+      const response = await fetch("http://localhost:3000/api/saveImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_url: data.publicUrl,
+          image_name: filename,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        console.log("Image metadata saved successfully:", result.data);
+      } else {
+        console.error("Error saving image metadata:", result.error);
+      }
+    } catch (err) {
+      console.error("Error uploading image metadata:", err);
+    }
     }
 
-    saveImageToDataBase();
+    ImageSave();
+
   }, [file]);
+
+  
+
+  
 
   return (
     <>
-      {file ? (
-        <ShowImage uniqueUrl={uniqueUrl} file={file} isDarkMode={isDarkMode} />
+      {file && uniqueUrl ? (
+        <ShowImage uniqueUrl={uniqueUrl} file={file} filename={uploadedFilename} isDarkMode={isDarkMode} />
       ) : (
         <section
           className={`flex items-center justify-center w-full h-[100vh] ${getBgColor()} transition-colors duration-300`}
