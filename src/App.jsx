@@ -1,19 +1,31 @@
-import {Nav, Dropfile} from "./components/index.js";
+import {Nav, Dropfile, ShowImage} from "./components/index.js";
 import { useState } from "react";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 
-
- 
-const App = () => {
-
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  
-  return (
-    <>
-      <Nav isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
-      <Dropfile isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}/>
-    </>
-  )
+// Wrapper to extract filename param and pass to ShowImage
+function ShowImageWrapper({ isDarkMode }) {
+  const { filename } = useParams();
+  return <ShowImage isDarkMode={isDarkMode} filename={filename} />;
 }
 
-export default App
+const App = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  return (
+    <BrowserRouter>
+      <Nav isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+      <Routes>
+        <Route
+          path="/"
+          element={<Dropfile isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />}
+        />
+        <Route
+          path="/image/:filename"
+          element={<ShowImageWrapper isDarkMode={isDarkMode} />}
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export default App;
