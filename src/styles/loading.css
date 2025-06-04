@@ -1,0 +1,28 @@
+@keyframes loading {
+  0% {
+    width: 0%;
+    background-color: #3b82f6;
+  }
+  30% {
+    width: 20%;
+    background-color: #2563eb;
+  }
+  50% {
+    width: 50%;
+    background-color: #2563eb;
+  }
+  70% {
+    width: 70%;
+    background-color: #2563eb;
+  }
+  100% {
+    width: 100%;
+    background-color: #1d4ed8;
+  }
+}
+
+.loading-progress {
+  animation: loading 2s ease-in-out infinite;
+  background-color: #3b82f6;
+  width: 0%;
+} 
