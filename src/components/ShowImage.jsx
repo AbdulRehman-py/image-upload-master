@@ -79,7 +79,7 @@ const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
             window.URL.revokeObjectURL(url);
           }}
         >
-          Download
+          <img src="/download.svg" alt="download" className="w-4 h-4 mr-2 inline-block" /> Download
         </button>
       </div>
     </div>

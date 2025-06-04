@@ -41,7 +41,7 @@ const ShareButton = ({ buttonClass, filename }) => {
     }
   };
 
-  return <button className={buttonClass} onClick={handleShare}>📢 Share</button>;
+  return <button className={buttonClass} onClick={handleShare}><img src="/Link.svg" alt="link" className="w-4 h-4 mr-2 inline-block" /> Share</button>;
 };
 
 export default ShareButton;
