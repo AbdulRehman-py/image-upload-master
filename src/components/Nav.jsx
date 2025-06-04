@@ -1,5 +1,10 @@
-const Nav = ({ isDarkMode, setIsDarkMode }) => {
+import { useNavigate } from "react-router-dom";
+
+const Nav = ({ isDarkMode, setIsDarkMode, onReset }) => {
+  
   const setbgcolor = () => (isDarkMode ? "bg-[#121826]" : "bg-gray-50");
+  const navigate = useNavigate();
+  
 
   return (
     <header
@@ -12,11 +17,13 @@ const Nav = ({ isDarkMode, setIsDarkMode }) => {
           <li className="flex items-center space-x-2">
             <img src="/logo.svg" alt="logo" width={130} height={60} />
           </li>
+           <div className="flex items-center justify-center gap-2">
           <li
             className={`p-1 rounded-[6px] shadow-md ${
               isDarkMode ? "bg-gray-400" : "bg-white"
             }`}
           >
+           
             <img
               src={isDarkMode ? "/Sun_fill.svg" : "/Moon_fill.svg"}
               alt={isDarkMode ? "sun icon" : "moon icon"}
@@ -27,7 +34,15 @@ const Nav = ({ isDarkMode, setIsDarkMode }) => {
               }
               onClick={() => setIsDarkMode(!isDarkMode)}
             />
+           
           </li>
+           <button className="bg-red-500 hover:bg-red-700 rounded-[6px] outline-none font-mono px-1 py-1 text-black" 
+           onClick={() => {
+        navigate("/");
+        onReset && onReset();
+      }}
+           >reset</button>
+            </div>
         </ul>
       </nav>
     </header>

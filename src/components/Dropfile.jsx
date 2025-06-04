@@ -1,11 +1,46 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import ShowImage from "./ShowImage";
+import { useDropzone } from 'react-dropzone';
 import { supabase } from "../../supabaseClient";
+import LoadingBar from "./LoadingBar";
+import "../styles/loading.css";
+import toast from 'react-hot-toast';
 
 const Dropfile = ({ isDarkMode }) => {
   const [screenSize, setScreenSize] = useState({
     isMobile: window.innerWidth < 640,
     isSmall: window.innerWidth < 450,
+  });
+
+  const [file, setFile] = useState(null);
+  const [uniqueUrl, setUniqueUrl] = useState("");
+  const [uploadedFilename, setUploadedFilename] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  const onDrop = React.useCallback((acceptedFiles) => {
+    const selectedFile = acceptedFiles[0];
+    if (selectedFile) {
+      const fileType = selectedFile.type;
+      if (["image/jpeg", "image/png", "image/gif"].includes(fileType)) {
+        setFile(selectedFile);
+      } else {
+        toast.error("Please select a valid image file (JPG, PNG, GIF)", {
+          duration: 3000,
+          icon: '🖼️',
+        });
+      }
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif']
+    },
+    maxSize: 2 * 1024 * 1024, // 2MB
+    multiple: false
   });
 
   useEffect(() => {
@@ -34,85 +69,69 @@ const Dropfile = ({ isDarkMode }) => {
     }
   };
 
-  // ...existing code...
-
-  const [file, setFile] = useState(null);
-  const fileInputRef = useRef(null);
-  const [uniqueUrl, setUniqueUrl] = useState("");
-  const handleButtonClick = () => fileInputRef.current.click();
-  const [uploadedFilename , setUploadedFilename] = useState("");
- 
-
-
-
-  const handleFileChange = () => {
-    const selectedFile = fileInputRef.current.files[0];
-    if (selectedFile) {
-      const fileType = selectedFile.type;
-      if (["image/jpeg", "image/png", "image/gif"].includes(fileType)) {
-        setFile(selectedFile);
-      } else {
-        alert("Please select a valid image file (JPG, PNG, GIF)");
-      }
-    }
-  };
-
   useEffect(() => {
-
     if (!file) return;
 
-    
+    setIsUploading(true);
     const filename = `${Date.now()}-${file.name}`;
     setUploadedFilename(filename);
+    
     async function ImageSave() {
+      try {
+        // Upload the file
+        const { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(filename, file);
+
+        if (uploadError) {
+          console.error("Error uploading file:", uploadError);
+          toast.error("Error uploading file. Please try again.");
+          return;
+        }
+
+        // Get the public URL
+        const { data } = await supabase.storage
+          .from("images")
+          .getPublicUrl(filename);
+
+        setUniqueUrl(data.publicUrl);
       
-      const {error} = await supabase.storage
-        .from('images')
-        .upload(filename, file);
-
-      if (error) {
-        console.error("Error uploading file:", error);
-        return;
+        // Save metadata
+        const response = await fetch("http://localhost:3000/api/saveImage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image_url: data.publicUrl,
+            image_name: filename,
+          }),
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          console.log("Image metadata saved successfully:", result.data);
+          toast.success("Image uploaded successfully!");
+        } else {
+          console.error("Error saving image metadata:", result.error);
+          toast.error("Error saving image metadata");
+        }
+      } catch (err) {
+        console.error("Error during image upload process:", err);
+        toast.error("An error occurred during upload");
+      } finally {
+        setIsUploading(false);
       }
-
-      const { data} = supabase.storage
-      .from("images")
-      .getPublicUrl(filename);
-
-      setUniqueUrl(data.publicUrl);
-    
-    
-    try {
-      const response = await fetch("http://localhost:3000/api/saveImage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_url: data.publicUrl,
-          image_name: filename,
-        }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        console.log("Image metadata saved successfully:", result.data);
-      } else {
-        console.error("Error saving image metadata:", result.error);
-      }
-    } catch (err) {
-      console.error("Error uploading image metadata:", err);
-    }
     }
 
     ImageSave();
-
   }, [file]);
-
-  
-
-  
 
   return (
     <>
-      {file && uniqueUrl ? (
+      {isUploading ? (
+        <section className={`flex items-center justify-center w-full h-[100vh] ${getBgColor()} transition-colors duration-300`}>
+          <LoadingBar />
+        </section>
+      ) : file && uniqueUrl ? (
         <ShowImage uniqueUrl={uniqueUrl} file={file} filename={uploadedFilename} isDarkMode={isDarkMode} />
       ) : (
         <section
@@ -124,8 +143,10 @@ const Dropfile = ({ isDarkMode }) => {
             } rounded-lg transition-colors duration-300`}
           >
             <div
-              className={`border-4 border-dotted ${getBorderColor()} rounded-lg flex flex-col items-center justify-center ${getPaddingClass()} transition-colors duration-300`}
+              {...getRootProps()}
+              className={`border-4 border-dotted ${getBorderColor()} rounded-lg flex flex-col items-center justify-center ${getPaddingClass()} transition-colors duration-300 cursor-pointer`}
             >
+              <input {...getInputProps()} />
               <img
                 src="/logo-small.svg"
                 alt="download icon"
@@ -135,20 +156,9 @@ const Dropfile = ({ isDarkMode }) => {
               <span
                 className={`${getTextColor()} text-[0.9rem] sm:text-base font-semibold font-sans mt-4 transition-colors duration-300`}
               >
-                Drag and drop files or{" "}
-                <button
-                  type="button"
-                  onClick={handleButtonClick}
-                  className="text-blue-500 cursor-pointer font-inter"
-                >
-                  browse files
-                </button>
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                />
+                {isDragActive
+                  ? "Drop the files here..."
+                  : "Drag and drop files or browse files"}
               </span>
               <p
                 className={`font-inter text-[0.9rem] sm:text-base ${
