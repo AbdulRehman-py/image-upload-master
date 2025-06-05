@@ -11,7 +11,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'https://imageuploadfrontend.vercel.app'],
+  origin: ['https://imageuploadfrontend.vercel.app', process.env.FRONTEND_URL || 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 app.use(express.json());
@@ -25,15 +27,27 @@ app.use((err, req, res, next) => {
 // Save image URL and name
 app.post("/api/saveImage", async (req, res, next) => {
   try {
+    console.log("Received request body:", req.body);
     const { image_url, image_name } = req.body;
+    
     if (!image_url || !image_name) {
-      return res.status(400).json({ success: false, error: 'Missing required fields' });
+      console.log("Missing fields:", { image_url, image_name });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required fields',
+        received: { image_url, image_name }
+      });
     }
+    
     const savedImage = await saveData(image_url, image_name);
+    console.log("Successfully saved image:", savedImage);
     res.json({ success: true, data: savedImage });
   } catch (err) {
     console.error("Error in /api/saveImage:", err);
-    next(err);
+    res.status(500).json({ 
+      success: false, 
+      error: err.message || 'Internal server error'
+    });
   }
 });
 
