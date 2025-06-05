@@ -22,7 +22,14 @@ const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
     // Only fetch if filename is present AND file/uniqueUrl are NOT set
     if (filename && !file && !uniqueUrl) {
       const decodedFilename = decodeURIComponent(filename);
-      fetch(`${import.meta.env.VITE_API_URL}/api/getImageUrl?filename=${decodedFilename}`)
+      fetch(`${import.meta.env.VITE_API_URL}/api/getImageUrl?filename=${decodedFilename}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include'
+      })
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

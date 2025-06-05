@@ -104,6 +104,7 @@ const Dropfile = ({ isDarkMode }) => {
             "Accept": "application/json"
           },
           mode: 'cors',
+          credentials: 'include',
           body: JSON.stringify({
             image_url: data.publicUrl,
             image_name: filename,

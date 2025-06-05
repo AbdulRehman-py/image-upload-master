@@ -9,23 +9,28 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Add request logging
+// CORS middleware should be first
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://imageuploadfrontend.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Other middleware
+app.use(express.json());
+
+// Request logging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
-
-// Middleware
-app.use(cors({
-  origin: '*',  // Allow all origins temporarily for testing
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false  // Changed to false since we're using '*'
-}));
-app.use(express.json());
-
-// Add OPTIONS handler for preflight requests
-app.options('*', cors());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
