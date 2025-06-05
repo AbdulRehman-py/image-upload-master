@@ -1,11 +1,15 @@
 import {Nav, Dropfile, ShowImage} from "./components/index.js";
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import { HashRouter, Routes, Route, useParams, Navigate } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
 
 function ShowImageWrapper({ isDarkMode }) {
   const { filename } = useParams();
-  return <ShowImage isDarkMode={isDarkMode} filename={filename} />;
+  return filename ? (
+    <ShowImage isDarkMode={isDarkMode} filename={filename} />
+  ) : (
+    <Navigate to="/" replace />
+  );
 }
 
 const App = () => {
@@ -17,7 +21,7 @@ const App = () => {
   };
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Toaster position="top-right" toastOptions={{
         style: {
           background: isDarkMode ? '#1F2937' : '#FFFFFF',
@@ -34,8 +38,9 @@ const App = () => {
           path="/image/:filename"
           element={<ShowImageWrapper isDarkMode={isDarkMode} />}
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 

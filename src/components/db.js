@@ -1,15 +1,4 @@
-import pg from "pg";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const { Pool } = pg;
-
-// Create connection pool using Supabase connection string
-const pool = new Pool({
-  connectionString: process.env.SUPABASE_DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+import { supabase } from "../../supabaseClient.js";
 
 // Run this once at startup
 async function createTableIfNotExists() {
@@ -21,52 +10,51 @@ async function createTableIfNotExists() {
     );
   `;
   
-  const tableExists = await pool.query(checkTable);
+  const tableExists = await supabase.from('shared_images').select('*', { count: 'exact' });
   
   // Only create table if it doesn't exist
-  if (!tableExists.rows[0].exists) {
-    const query = `
-      CREATE TABLE IF NOT EXISTS shared_images (
-        id SERIAL PRIMARY KEY,
-        image_url TEXT UNIQUE NOT NULL,
-        image_name TEXT
-      );
-    `;
-    await pool.query(query);
-    console.log("Table created successfully");
+  if (tableExists.count === 0) {
+    const { data, error } = await supabase.from('shared_images').insert([
+      { image_url: 'placeholder', image_name: 'placeholder' }
+    ]).select();
+    
+    if (error) {
+      console.error("Error creating table:", error);
+    } else {
+      console.log("Table created successfully");
+    }
   } else {
     console.log("Table already exists");
   }
 }
 
 async function saveData(image_url, image_name) {
-  const query = `
-    INSERT INTO shared_images (image_url, image_name)
-    VALUES ($1, $2)
-    RETURNING *;
-  `;
-  const values = [image_url, image_name];
-  
   try {
-    const res = await pool.query(query, values);
-    console.log("Data saved:", res.rows[0]);
-    return res.rows[0];
+    const { data, error } = await supabase
+      .from('shared_images')
+      .insert([
+        { image_url, image_name }
+      ])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error saving data:", error);
+      throw error;
+    }
+    
+    console.log("Data saved:", data);
+    return data;
   } catch (err) {
-    console.error("Error saving data:", err);
+    console.error("Error in saveData:", err);
     throw err;
   }
 }
 
-// Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection error:', err);
-  } else {
-    console.log('Database connected successfully');
-  }
-});
+// Initialize
+console.log("Database connection established");
 
 createTableIfNotExists().catch(console.error);
-console.log("Database connection established");
-export { saveData, pool };
+
+export { saveData };
 

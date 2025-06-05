@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { saveData, pool } from "./src/components/db.js";
+import { supabase } from "./supabaseClient.js";
+import { saveData } from "./src/components/db.js";
 
 dotenv.config();
 
@@ -31,40 +32,37 @@ app.post("/api/saveImage", async (req, res, next) => {
     const savedImage = await saveData(image_url, image_name);
     res.json({ success: true, data: savedImage });
   } catch (err) {
+    console.error("Error in /api/saveImage:", err);
     next(err);
   }
 });
 
-// Get all images
-app.get("/api/AllImages", async (req, res, next) => {
-  try {
-    const { rows } = await pool.query(
-      "SELECT image_url, image_name FROM shared_images ORDER BY id DESC"
-    );
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Get specific image by filename
+// Get image URL by filename
 app.get("/api/getImageUrl", async (req, res, next) => {
   try {
-    let { filename } = req.query;
+    const { filename } = req.query;
     if (!filename) {
       return res.status(400).json({ success: false, error: 'Filename is required' });
     }
-    filename = decodeURIComponent(filename);
-    const { rows } = await pool.query(
-      "SELECT image_url FROM shared_images WHERE image_name = $1 LIMIT 1",
-      [filename]
-    );
-    if (rows.length > 0) {
-      res.json({ success: true, image_url: rows[0].image_url });
-    } else {
-      res.status(404).json({ success: false, error: 'Image not found' });
+
+    const { data, error } = await supabase
+      .from('shared_images')
+      .select('image_url')
+      .eq('image_name', filename)
+      .single();
+
+    if (error) {
+      console.error("Error fetching image:", error);
+      return res.status(404).json({ success: false, error: 'Image not found' });
     }
+
+    if (!data) {
+      return res.status(404).json({ success: false, error: 'Image not found' });
+    }
+
+    res.json({ success: true, image_url: data.image_url });
   } catch (err) {
+    console.error("Error in /api/getImageUrl:", err);
     next(err);
   }
 });

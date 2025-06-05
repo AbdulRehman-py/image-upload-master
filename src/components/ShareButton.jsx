@@ -10,8 +10,9 @@ const ShareButton = ({ buttonClass, filename }) => {
       return;
     }
 
-    // Build the shareable app URL
-    const shareUrl = `${window.location.origin}/image/${filename}`;
+    // Build the shareable app URL with proper encoding
+    const encodedFilename = encodeURIComponent(filename);
+    const shareUrl = `${window.location.origin}/#/image/${encodedFilename}`;
 
     if (navigator.share) {
       navigator.share({

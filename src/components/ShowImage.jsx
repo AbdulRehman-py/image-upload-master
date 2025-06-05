@@ -3,6 +3,7 @@ import ShareButton from "./ShareButton";
 
 const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
   const [imageSrc, setImageSrc] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let url;
@@ -20,18 +21,27 @@ const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
 
     // Only fetch if filename is present AND file/uniqueUrl are NOT set
     if (filename && !file && !uniqueUrl) {
-      fetch(`http://localhost:3000/api/getImageUrl?filename=${filename}`)
-        .then((response) => response.json())
+      const decodedFilename = decodeURIComponent(filename);
+      fetch(`http://localhost:3000/api/getImageUrl?filename=${decodedFilename}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success && data.image_url) {
             setImageSrc(data.image_url);
+            setError(null);
           } else {
             setImageSrc(null);
+            setError("Failed to load image");
           }
         })
         .catch((error) => {
           console.error("Error fetching image URL:", error);
           setImageSrc(null);
+          setError("Failed to load image");
         });
       return;
     }
@@ -53,35 +63,48 @@ const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
           isDarkMode ? "bg-[#121826]" : "bg-gray-100"
         } rounded-lg transition-colors duration-300`}
       >
-        {imageSrc && (
+        {error ? (
+          <div className="text-red-500 text-center p-4">{error}</div>
+        ) : imageSrc ? (
           <img
             src={imageSrc}
             alt="Uploaded preview"
             className="w-full h-auto max-h-[80vh] object-contain rounded-[5px]"
             style={{ minHeight: '200px' }}
+            onError={() => setError("Failed to load image")}
           />
+        ) : (
+          <div className="text-center p-4">Loading...</div>
         )}
       </div>
-      <div className="flex gap-2">
-        <ShareButton buttonClass={buttonClass} filename={filename} />
-        <button
-          className={buttonClass}
-          onClick={async () => {
-            const response = await fetch(imageSrc);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename || "downloaded-image";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-          }}
-        >
-          <img src="/download.svg" alt="download" className="w-4 h-4 mr-2 inline-block" /> Download
-        </button>
-      </div>
+      {imageSrc && !error && (
+        <div className="flex gap-2">
+          <ShareButton buttonClass={buttonClass} filename={filename} />
+          <button
+            className={buttonClass}
+            onClick={async () => {
+              try {
+                const response = await fetch(imageSrc);
+                if (!response.ok) throw new Error('Download failed');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename || "downloaded-image";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+              } catch (err) {
+                console.error("Download error:", err);
+                setError("Failed to download image");
+              }
+            }}
+          >
+            <img src="/download.svg" alt="download" className="w-4 h-4 mr-2 inline-block" /> Download
+          </button>
+        </div>
+      )}
     </div>
   );
 };
