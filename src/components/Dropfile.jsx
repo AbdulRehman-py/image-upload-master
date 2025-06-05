@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ShowImage from "./ShowImage";
 import { useDropzone } from 'react-dropzone';
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../supabaseClient";
 import LoadingBar from "./LoadingBar";
 import "../styles/loading.css";
 import toast from 'react-hot-toast';
