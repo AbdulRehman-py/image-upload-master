@@ -97,7 +97,7 @@ const Dropfile = ({ isDarkMode }) => {
         setUniqueUrl(data.publicUrl);
       
         // Save metadata
-        const response = await fetch("http://localhost:3000/api/saveImage", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/saveImage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
