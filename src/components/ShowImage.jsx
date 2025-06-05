@@ -27,8 +27,7 @@ const ShowImage = ({ isDarkMode, file, uniqueUrl, filename }) => {
         headers: {
           'Accept': 'application/json'
         },
-        mode: 'cors',
-        credentials: 'include'
+        mode: 'cors'
       })
         .then((response) => {
           if (!response.ok) {

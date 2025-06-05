@@ -9,21 +9,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS middleware should be first
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://imageuploadfrontend.vercel.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
-});
+// Simple CORS configuration
+const corsOptions = {
+  origin: 'https://imageuploadfrontend.vercel.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  credentials: false
+};
 
-// Other middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Request logging
