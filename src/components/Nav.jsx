@@ -15,7 +15,7 @@ const Nav = ({ isDarkMode, setIsDarkMode, onReset }) => {
       <nav>
         <ul className="flex items-center justify-between">
           <li className="flex items-center space-x-2">
-            <img src="/logo.svg" alt="logo" width={130} height={60} />
+            <img src={`${isDarkMode ? "/logo-white.svg" : "/logo.svg"}`} alt="logo" width={130} height={60} />
           </li>
            <div className="flex items-center justify-center gap-2">
           <li
