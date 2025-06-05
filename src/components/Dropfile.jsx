@@ -99,7 +99,11 @@ const Dropfile = ({ isDarkMode }) => {
         // Save metadata
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/saveImage`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          mode: 'cors',
           body: JSON.stringify({
             image_url: data.publicUrl,
             image_name: filename,

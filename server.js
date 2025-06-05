@@ -9,14 +9,23 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Add request logging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
+
 // Middleware
 app.use(cors({
-  origin: ['https://imageuploadfrontend.vercel.app', process.env.FRONTEND_URL || 'http://localhost:5173'],
+  origin: '*',  // Allow all origins temporarily for testing
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: false  // Changed to false since we're using '*'
 }));
 app.use(express.json());
+
+// Add OPTIONS handler for preflight requests
+app.options('*', cors());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
